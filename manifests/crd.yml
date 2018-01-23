@@ -1,0 +1,14 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: pxehosts.stable.flotilla.io
+spec:
+  group: stable.flotilla.io
+  version: v1
+  scope: Namespaced
+  names:
+    plural: pxehosts
+    singular: pxehost
+    kind: PXEHost
+    shortNames:
+    - ph

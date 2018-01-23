@@ -19,8 +19,9 @@ import logging
 import sys
 
 from flotilla.config import Config
-
-from flask import Flask
+from flotilla.dnsmasq.config import Config as DnsmasqConfig
+from flotilla.dnsmasq.dhcp_range import DHCPRange
+from flotilla.kube import control_loop
 
 LOG = logging.getLogger(__name__)
 
@@ -37,13 +38,13 @@ def _setup_logger(debug=False):
 
 
 def run(config):
-    app = Flask(__name__)
 
-    @app.route('/', methods=['POST'])
-    def post():
-        print("Got post")
+    # add a dummy config for now
+    r = DHCPRange('192.168.0.10', '192.168.0.20', '12h')
+    c = DnsmasqConfig(interfaces='eth2', dhcp_range=r)
+    c.persist()
 
-    app.run(port=9090)
+    control_loop()
 
 
 def main():
