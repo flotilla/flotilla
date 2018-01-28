@@ -16,7 +16,7 @@
 
 import os
 
-from flotilla.dnsmasq import DEFAULT_TFTP_ROOT
+from flotilla.dnsmasq import CONFIG_PATH, DEFAULT_TFTP_ROOT
 
 from jinja2 import BaseLoader, Environment
 
@@ -55,7 +55,7 @@ class Config(object):
         self.tftp_enabled = tftp_enabled
         self.tftp_root = tftp_root
 
-    def persist(self, filename):
+    def persist(self, filename=os.path.join(CONFIG_PATH, "flotilla.conf")):
         template = Environment(loader=BaseLoader()).from_string(CONFIG_TMPL)
         output = template.render(self.__dict__)
 
@@ -63,7 +63,7 @@ class Config(object):
             fh.write(output)
 
         # FIXME: this really belongs as its own thing
-        ipxe_config = os.path.join(DEFAULT_TFTP_ROOT, "flotilla.ipxe")
+        ipxe_config = os.path.join(DEFAULT_TFTP_ROOT, "flotilla/flotilla.ipxe")
         with open(ipxe_config, "w") as fh:
-            conf = "#!ipxe\n\nchain http://boot.ipxe.org/demo/boot.php?mac=${net0/mac}"  # noqa
+            conf = "#!ipxe\n\nchain http://192.168.1.10:8081/boot.ipxe"  # noqa
             fh.write(conf)

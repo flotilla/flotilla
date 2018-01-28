@@ -17,7 +17,7 @@
 import logging
 import os.path
 
-from flotilla.dnsmasq import CONFIG_DIR
+from flotilla.dnsmasq import CONFIG_PATH
 
 LOG = logging.getLogger(__name__)
 FLOTILLA_HOSTS_CONFIG_FILE = "flotilla-hosts.conf"
@@ -30,17 +30,14 @@ class HostsConfig(object):
         self.filename = filename
 
     def add(self, host):
-        LOG.debug("jjje")
         self._hosts.add(host)
-        LOG.debug("KJKJHKJH")
 
     def remove(self, host):
         self._hosts.delete(host)
 
     def persist(self):
-        filename = os.path.join(CONFIG_DIR, self.filename)
-        filename = os.path.join("/tmp", self.filename)
+        filename = os.path.join(CONFIG_PATH, self.filename)
         LOG.debug("Persisting hosts config to %s" % filename)
         with open(filename, 'w') as fh:
             for host in self._hosts:
-                fh.write("dhcp-host=%s" % host)
+                fh.write("dhcp-host=%s\n" % host)

@@ -14,5 +14,5 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 
-CONFIG_DIR = "/etc/dnsmasq.d"
+CONFIG_PATH = "/etc/dnsmasq.d"
 DEFAULT_TFTP_ROOT = '/var/lib/tftproot'
