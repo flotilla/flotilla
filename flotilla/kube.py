@@ -16,7 +16,11 @@
 
 import logging
 
-from Queue import Queue
+try:
+    from Queue import Queue
+except:
+    from queue import Queue
+
 from threading import Thread
 
 from flotilla.dnsmasq.dhcp_host import DHCPHost
