@@ -21,7 +21,7 @@ import sys
 from flotilla.config import Config
 from flotilla.dnsmasq.config import Config as DnsmasqConfig
 from flotilla.dnsmasq.dhcp_range import DHCPRange
-from flotilla.kube import control_loop
+from flotilla.kubernetes.control import control_loop
 
 LOG = logging.getLogger(__name__)
 

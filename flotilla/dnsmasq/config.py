@@ -48,22 +48,32 @@ log-dhcp
 class Config(object):
 
     def __init__(self, interfaces='all', dhcp_range=None, dhcp_hosts=[],
-                 tftp_enabled=True, tftp_root=DEFAULT_TFTP_ROOT):
+                 config_path=CONFIG_PATH, tftp_enabled=True,
+                 tftp_root=DEFAULT_TFTP_ROOT):
         self.interfaces = interfaces
         self.dhcp_range = dhcp_range
         self.dhcp_hosts = dhcp_hosts
+        self.config_path = config_path
         self.tftp_enabled = tftp_enabled
         self.tftp_root = tftp_root
 
-    def persist(self, filename=os.path.join(CONFIG_PATH, "flotilla.conf")):
+    def persist(self, filename=None):
+        if not filename:
+            filename = os.path.join(self.config_path, "flotilla.conf")
         template = Environment(loader=BaseLoader()).from_string(CONFIG_TMPL)
         output = template.render(self.__dict__)
 
+        directory = os.path.dirname(filename)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         with open(filename, 'w') as fh:
             fh.write(output)
 
         # FIXME: this really belongs as its own thing
-        ipxe_config = os.path.join(DEFAULT_TFTP_ROOT, "flotilla/flotilla.ipxe")
+        ipxe_config = os.path.join(self.tftp_root, "flotilla/flotilla.ipxe")
+        directory = os.path.dirname(ipxe_config)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         with open(ipxe_config, "w") as fh:
             conf = "#!ipxe\n\nchain http://192.168.1.10:8081/boot.ipxe"  # noqa
             fh.write(conf)

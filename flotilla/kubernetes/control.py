@@ -15,16 +15,18 @@
 #    License for the specific language governing permissions and limitations
 
 import logging
+import pprint
 
 try:
     from Queue import Queue
-except:
+except ImportError:
     from queue import Queue
 
 from threading import Thread
 
-from flotilla.dnsmasq.dhcp_host import DHCPHost
 from flotilla.dnsmasq.hosts_config import HostsConfig
+from flotilla.drivers import ManagementDriverFactory
+from flotilla.kubernetes.host_spec import HostSpecFactory
 
 from kubernetes import client, config, watch
 
@@ -36,27 +38,33 @@ def update_hosts(event_queue):
     known_hosts = {}
 
     while True:
-        dirty = False
+        dhcp_dirty = False
         event = event_queue.get()
-        LOG.debug("Received API event: %s" % event)
+        LOG.debug("Received an API event: %s" % pprint.pformat(event))
 
         uid = event['object']['metadata']['uid']
+        host = HostSpecFactory.from_dict(event['object']['spec'])
 
         if event.get('type') == 'ADDED' or event.get('type') == 'MODIFIED':
-            mac = event['object']['spec']['macAddress']
-            ipv4 = event['object']['spec']['ipAddress']
-            hostname = event['object']['spec']['hostname']
-            host = DHCPHost(mac, ipv4, hostname)
-
             known_hosts[uid] = host
-            dirty = True
+            dhcp_dirty = True
         elif uid in known_hosts and event.get('type') == 'DELETED':
             del(known_hosts[uid])
-            dirty = True
+            dhcp_dirty = True
 
-        if dirty:
+        if dhcp_dirty:
             LOG.debug("Persisting the configuration")
             HostsConfig(hosts=known_hosts.values()).persist()
+
+            driver_name = host.management_driver
+            driver = ManagementDriverFactory.get_driver(driver_name,
+                                                        {"host": host})
+            if not driver:
+                LOG.error("Failed to get driver with name: %s", driver_name)
+                continue
+
+            LOG.info("Rebooting host '%s' with pxe= True" % host.hostname)
+            driver.reboot(pxe=True)
 
 
 def control_loop(config_file='flotilla-hosts.conf'):
@@ -77,7 +85,6 @@ def control_loop(config_file='flotilla-hosts.conf'):
 
     LOG.debug("Starting watch loop")
     while True:
-        LOG.debug("FOOOO")
         stream = watch.Watch().stream(
             crds.list_cluster_custom_object,
             "stable.flotilla.io",
@@ -85,5 +92,5 @@ def control_loop(config_file='flotilla-hosts.conf'):
             "pxehosts")
         LOG.debug("Received stream data from API server.")
         for event in stream:
-            LOG.debug("Putting event on queue")
+            LOG.debug("Putting event on queue: %s" % pprint.pformat(event))
             event_queue.put(event)

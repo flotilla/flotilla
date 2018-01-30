@@ -1,3 +1,6 @@
+amt
 flask
 kubernetes
 pyyaml
+stevedore
+stringcase

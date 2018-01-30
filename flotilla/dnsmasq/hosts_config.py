@@ -40,4 +40,5 @@ class HostsConfig(object):
         LOG.debug("Persisting hosts config to %s" % filename)
         with open(filename, 'w') as fh:
             for host in self._hosts:
-                fh.write("dhcp-host=%s\n" % host)
+                fh.write("dhcp-host=%s,%s.%s,%s\n" % (host.mac_address,
+                         host.ip_address, host.hostname, 'infinite'))
